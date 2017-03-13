@@ -10,6 +10,7 @@
 
 import tensorflow as tf
 import numpy as np
+from pip._vendor.requests.packages.urllib3.connectionpool import xrange
 from scipy.misc import imread, imresize
 from imagenet_classes import class_names
 import os
@@ -259,21 +260,26 @@ if __name__ == '__main__':
     vgg = vgg16(imgs, 'vgg16_weights.npz', sess)
 
     PATH = "data/sample/"
+    BATCH_SIZE = 2
 
-    batch = np.zeros((10, 224, 224, 3))
-    images = os.path.abspath(PATH)
+    images = os.listdir(PATH) #os.path.abspath(PATH)
+    batch = np.zeros((BATCH_SIZE, 224, 224, 3))
     j = 0
-    for i in os.listdir(images):
-        im = imread(os.path.join(images, i), mode='RGB')
+    for i in range(0, len(images)):
+        im = imread(os.path.join(PATH,images[i]), mode='RGB')
         batch[j] = imresize(im, (224, 224))
-        j += 1
+        j+=1
+        if j % BATCH_SIZE == 0:
+            features = sess.run(vgg.fc3l, feed_dict={vgg.imgs: batch})
+            batch = np.zeros((BATCH_SIZE, 224, 224, 3))
+            j=0
 
     #
     # img1 = imread('laska.png', mode='RGB')
     # img1 = imresize(img1, (224, 224))
 
     # prob = sess.run(vgg.probs, feed_dict={vgg.imgs: [img1]})[0]
-    features = sess.run(vgg.fc3l, feed_dict={vgg.imgs: batch})
-    preds = (np.argsort(features[0])[::-1])[0:5]
-    for p in preds:
-        print class_names[p], features[0][p]
+
+    # preds = (np.argsort(features[0])[::-1])[0:5]
+    # for p in preds:
+    #     print(class_names[p], features[0][p])
