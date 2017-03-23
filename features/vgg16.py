@@ -16,14 +16,15 @@ from imagenet_classes import class_names
 import os
 
 
-class vgg16:
-    def __init__(self, imgs, weights=None, sess=None):
-        self.imgs = imgs
+class vgg16(object):
+    def __init__(self, weights=None):
+        self.sess = tf.Session()
+        self.imgs = tf.placeholder(tf.float32, [224, 224, 3])
         self.convlayers()
         self.fc_layers()
         self.probs = tf.nn.softmax(self.fc3l)
-        if weights is not None and sess is not None:
-            self.load_weights(weights, sess)
+        if weights is not None and self.sess is not None:
+            self.load_weights(weights, self.sess)
 
     def convlayers(self):
         self.parameters = []
@@ -253,26 +254,30 @@ class vgg16:
             print(i, k, np.shape(weights[k]))
             sess.run(self.parameters[i].assign(weights[k]))
 
+    def get_feature(self, filepath):
+        img = imread(filepath, mode='RGB')
+        img = imresize(img, (224, 224))
+        features = self.sess.run(self.fc3l, feed_dict={self.imgs: img})
+        return features
 
-if __name__ == '__main__':
-    sess = tf.Session()
-    imgs = tf.placeholder(tf.float32, [None, 224, 224, 3])
-    vgg = vgg16(imgs, 'vgg16_weights.npz', sess)
 
-    PATH = "data/sample/"
-    BATCH_SIZE = 2
-
-    images = os.listdir(PATH) #os.path.abspath(PATH)
-    batch = np.zeros((BATCH_SIZE, 224, 224, 3))
-    j = 0
-    for i in range(0, len(images)):
-        im = imread(os.path.join(PATH,images[i]), mode='RGB')
-        batch[j] = imresize(im, (224, 224))
-        j+=1
-        if j % BATCH_SIZE == 0:
-            features = sess.run(vgg.fc3l, feed_dict={vgg.imgs: batch})
-            batch = np.zeros((BATCH_SIZE, 224, 224, 3))
-            j=0
+    # def initvgg(self):
+    #     sess = tf.Session()
+    #     imgs = tf.placeholder(tf.float32, [None, 224, 224, 3])
+    #     vgg = vgg16(imgs, 'vgg16_weights.npz', sess)
+    #     PATH = "data/sample/"
+    #     BATCH_SIZE = 2
+    #     images = os.listdir(PATH) #os.path.abspath(PATH)
+    #     batch = np.zeros((BATCH_SIZE, 224, 224, 3))
+    #     j = 0
+    #     for i in range(0, len(images)):
+    #         im = imread(os.path.join(PATH,images[i]), mode='RGB')
+    #         batch[j] = imresize(im, (224, 224))
+    #         j+=1
+    #         if j % BATCH_SIZE == 0:
+    #             features = sess.run(vgg.fc3l, feed_dict={vgg.imgs: batch})
+    #             batch = np.zeros((BATCH_SIZE, 224, 224, 3))
+    #             j=0
 
     #
     # img1 = imread('laska.png', mode='RGB')
