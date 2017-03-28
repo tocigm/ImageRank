@@ -12,7 +12,6 @@ import tensorflow as tf
 import numpy as np
 from pip._vendor.requests.packages.urllib3.connectionpool import xrange
 from scipy.misc import imread, imresize
-from imagenet_classes import class_names
 import os
 
 

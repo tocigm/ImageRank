@@ -4,7 +4,7 @@ import os
 from flask import Flask, request, redirect, url_for, make_response
 from werkzeug import secure_filename
 import json
-from vgg16 import vgg16
+from features.vgg16 import vgg16
 
 UPLOAD_FOLDER = os.path.dirname(os.path.abspath(__file__))+'/uploads/'
 ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg', 'gif'])
