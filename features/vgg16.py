@@ -13,6 +13,7 @@ import numpy as np
 from pip._vendor.requests.packages.urllib3.connectionpool import xrange
 from scipy.misc import imread, imresize
 import os
+import json
 
 
 class vgg16(object):
@@ -24,6 +25,14 @@ class vgg16(object):
         self.probs = tf.nn.softmax(self.fc3l)
         if weights is not None and self.sess is not None:
             self.load_weights(weights, self.sess)
+
+    def __init__(self, imgs, weights=None, sess=None):
+        self.imgs = imgs
+        self.convlayers()
+        self.fc_layers()
+        self.probs = tf.nn.softmax(self.fc3l)
+        if weights is not None and sess is not None:
+            self.load_weights(weights, sess)
 
     def convlayers(self):
         self.parameters = []
@@ -259,6 +268,34 @@ class vgg16(object):
         features = self.sess.run(self.fc3l, feed_dict={self.imgs: img})
         return features
 
+if __name__ == '__main__':
+     sess = tf.Session()
+     imgs = tf.placeholder(tf.float32, [None, 224, 224, 3])
+     vgg = vgg16(imgs, '../vgg16_weights.npz', sess)
+
+     PATH = "../data/enbac_dress/"
+     BATCH_SIZE = 2
+     FILE_PATH = "output.txt"
+     target = open(FILE_PATH, 'w')
+
+     images = os.listdir(PATH)  # os.path.abspath(PATH)
+     batch = np.zeros((BATCH_SIZE, 224, 224, 3))
+     j = 0
+     for i in range(0, len(images)):
+         im = imread(os.path.join(PATH, images[i]), mode='RGB')
+         batch[j] = imresize(im, (224, 224))
+         j += 1
+         if j % BATCH_SIZE == 0:
+             features = sess.run(vgg.fc3l, feed_dict={vgg.imgs: batch})
+             batch = np.zeros((BATCH_SIZE, 224, 224, 3))
+             for k in range(0,j):
+                 target.write(os.path.abspath(os.path.join(PATH, images[i])))
+                 target.write("\n")
+                 list = features.tolist()[k]
+                 target.write(json.dumps(list))
+                 target.write("\n")
+             j = 0
+     target.close()
 
     # def initvgg(self):
     #     sess = tf.Session()
