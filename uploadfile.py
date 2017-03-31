@@ -1,6 +1,6 @@
 import uuid
 import os
-
+import tensorflow as tf
 from flask import Flask, request, redirect, url_for, make_response
 from werkzeug import secure_filename
 import json
@@ -40,7 +40,9 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
-vgg = vgg16('vgg16_weights.npz')
+sess = tf.Session()
+imgs = tf.placeholder(tf.float32, [224, 224, 3])
+vgg = vgg16(imgs, 'vgg16_weights.npz', sess)
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -53,7 +55,7 @@ def upload_file():
             newfilename = str(uuid.uuid1()) + file_extension
             newfilepath = os.path.join(app.config['UPLOAD_FOLDER'], newfilename)
             file.save(newfilepath)
-            feature = vgg.get_feature(newfilepath)
+            feature = vgg.get_feature(newfilepath, sess)
             list = feature.tolist()[0]
             os.remove(newfilepath);
             response = make_response(json.dumps(list))

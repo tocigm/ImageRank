@@ -17,14 +17,14 @@ import json
 
 
 class vgg16(object):
-    def __init__(self, weights=None):
-        self.sess = tf.Session()
-        self.imgs = tf.placeholder(tf.float32, [224, 224, 3])
-        self.convlayers()
-        self.fc_layers()
-        self.probs = tf.nn.softmax(self.fc3l)
-        if weights is not None and self.sess is not None:
-            self.load_weights(weights, self.sess)
+    # def __init__(self, weights=None):
+    #     self.sess = tf.Session()
+    #     self.imgs = tf.placeholder(tf.float32, [224, 224, 3])
+    #     self.convlayers()
+    #     self.fc_layers()
+    #     self.probs = tf.nn.softmax(self.fc3l)
+    #     if weights is not None and self.sess is not None:
+    #         self.load_weights(weights, self.sess)
 
     def __init__(self, imgs, weights=None, sess=None):
         self.imgs = imgs
@@ -262,10 +262,10 @@ class vgg16(object):
             print(i, k, np.shape(weights[k]))
             sess.run(self.parameters[i].assign(weights[k]))
 
-    def get_feature(self, filepath):
+    def get_feature(self, filepath, sess):
         img = imread(filepath, mode='RGB')
         img = imresize(img, (224, 224))
-        features = self.sess.run(self.fc3l, feed_dict={self.imgs: img})
+        features = sess.run(self.fc3l, feed_dict={self.imgs: img})
         return features
 
 if __name__ == '__main__':
@@ -273,8 +273,8 @@ if __name__ == '__main__':
      imgs = tf.placeholder(tf.float32, [None, 224, 224, 3])
      vgg = vgg16(imgs, '../vgg16_weights.npz', sess)
 
-     PATH = "../data/enbac_dress/"
-     BATCH_SIZE = 2
+     PATH = "../data/sample/"
+     BATCH_SIZE = 1
      FILE_PATH = "output.txt"
      target = open(FILE_PATH, 'w')
 
@@ -289,7 +289,7 @@ if __name__ == '__main__':
              features = sess.run(vgg.fc3l, feed_dict={vgg.imgs: batch})
              batch = np.zeros((BATCH_SIZE, 224, 224, 3))
              for k in range(0,j):
-                 target.write(os.path.abspath(os.path.join(PATH, images[i])))
+                 target.write(os.path.abspath(os.path.join(PATH, images[i-j+k+1])))
                  target.write("\n")
                  list = features.tolist()[k]
                  target.write(json.dumps(list))
